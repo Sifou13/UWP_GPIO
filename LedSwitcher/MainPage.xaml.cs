@@ -16,6 +16,7 @@ using Windows.Devices.Gpio;
 using System.Threading.Tasks;
 using System.Threading;
 
+
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace LedSwitcher
@@ -54,10 +55,10 @@ namespace LedSwitcher
             else
                 buttonPin_27.SetDriveMode(GpioPinDriveMode.Input);
 
-            yellowLedPin_5.Write(GpioPinValue.High);
-            rgbLedPin_6.Write(GpioPinValue.High);
-            rgbLedPinp_13.Write(GpioPinValue.High);
-            rgbLedPin_17.Write(GpioPinValue.High);
+            yellowLedPin_5.Write(GpioPinValue.Low);
+            rgbLedPin_6.Write(GpioPinValue.Low);
+            rgbLedPinp_13.Write(GpioPinValue.Low);
+            rgbLedPin_17.Write(GpioPinValue.Low);
 
             yellowLedPin_5.SetDriveMode(GpioPinDriveMode.Output);
             rgbLedPin_6.SetDriveMode(GpioPinDriveMode.Output);
@@ -74,7 +75,10 @@ namespace LedSwitcher
         {
             GpioPin[] pinArray = new GpioPin[] { rgbLedPin_6, rgbLedPinp_13, rgbLedPin_17, yellowLedPin_5 };
 
-            if (args.Edge == GpioPinEdge.FallingEdge)
+            if (args.Edge == GpioPinEdge.RisingEdge)
+                return;
+
+            if (tokenSource == null)
             {
                 tokenSource = new CancellationTokenSource();
                 token = tokenSource.Token;
@@ -96,11 +100,13 @@ namespace LedSwitcher
                         System.Threading.Tasks.Task.Delay(250).Wait();
                     }
                 }), token);
-
             }
             else
             {
                 tokenSource.Cancel();
+                tokenSource.Dispose();
+
+                tokenSource = null;
 
                 while (pinArray.Any(x => x.Read() == GpioPinValue.High))
                 {
